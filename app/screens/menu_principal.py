@@ -45,7 +45,7 @@ class MenuPrincipal(MDScreen):
         content = MDBoxLayout(orientation='vertical')
 
         # Barra superior con menú sandwich que abre el drawer
-        self.toolbar = MDTopAppBar(title='CiclisApp', elevation=8, left_action_items=[['menu', lambda x: self.nav_drawer.set_state('open')]])
+        self.toolbar = MDTopAppBar(title='CiclisApp', elevation=0, left_action_items=[['menu', lambda x: self.nav_drawer.set_state('open')]])
         content.add_widget(self.toolbar)
 
         # Navegación inferior

@@ -42,7 +42,7 @@ class SOSScreen(MDScreen):
         layout = MDBoxLayout(orientation='vertical', padding=dp(20), spacing=dp(12))
 
         # Card centrada con ancho reducido
-        card = MDCard(orientation='vertical', padding=dp(16), radius=[16, 16, 16, 16], elevation=8, size_hint=(0.95, None), height=dp(420))
+        card = MDCard(orientation='vertical', padding=dp(16), radius=[16, 16, 16, 16], elevation=0, size_hint=(0.95, None), height=dp(420))
         card_box = MDBoxLayout(orientation='vertical', spacing=dp(12), padding=(dp(12), dp(8)))
 
         # Icono grande SOS: preferir MDIconButton si está disponible

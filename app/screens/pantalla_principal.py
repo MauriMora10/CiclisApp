@@ -41,7 +41,7 @@ class PantallaPrincipal(MDScreen):
 
         # Toolbar
         self.toolbar = MDTopAppBar(
-            title="CiclisApp", elevation=8, md_bg_color=COLORES['principal'], radius=[16, 16, 0, 0]
+            title="CiclisApp", elevation=0, md_bg_color=COLORES['principal'], radius=[16, 16, 0, 0]
         )
         self.toolbar.left_action_items = [["arrow-left", lambda x: self.volver_a_login(x)]]
         self.toolbar.right_action_items = [
@@ -56,7 +56,7 @@ class PantallaPrincipal(MDScreen):
             text="Ver Mapa",
             md_bg_color=COLORES['secundario'],
             font_style="Button",
-            elevation=4,
+            elevation=0,
             on_release=self.ir_a_mapa,
         )
         self.main_layout.add_widget(self.btn_mapa)

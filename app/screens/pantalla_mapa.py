@@ -20,7 +20,7 @@ class PantallaMapa(MDScreen):
         # Barra superior (sin botón de regresar)
         self.toolbar = MDTopAppBar(
             title="Mapa de Zonas Seguras",
-            elevation=8
+            elevation=0
         )
         self.layout.add_widget(self.toolbar)
 
@@ -35,7 +35,7 @@ class PantallaMapa(MDScreen):
             orientation="vertical",
             padding=dp(16),
             radius=[20, 20, 20, 20],
-            elevation=6,
+            elevation=0,
             size_hint=(1, None),
             adaptive_height=True
         )

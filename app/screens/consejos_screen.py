@@ -1,5 +1,5 @@
 from kivy.metrics import dp
-from kivy.uix.widget import Widget
+from kivy.animation import Animation
 import random
 import webbrowser
 
@@ -9,8 +9,9 @@ from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.label import MDLabel
 from kivymd.uix.button import MDRaisedButton, MDIconButton
 from kivymd.uix.scrollview import MDScrollView
-from kivymd.uix.list import IRightBodyTouch
 
+
+# --- Consejos aleatorios ---
 CONSEJOS = [
     "Usa casco siempre que salgas a pedalear.",
     "Respeta las señales de tránsito y cruces peatonales.",
@@ -20,128 +21,192 @@ CONSEJOS = [
     "Planifica tu ruta antes de salir."
 ]
 
+
 class ConsejosScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.name = 'consejos'
 
-        # Root vertical: top for consejo (~38%), bottom for noticias (rest)
-        root = MDBoxLayout(orientation='vertical', padding=dp(12), spacing=dp(10))
-
-        # --- Consejo (parte superior) ---
-        # Tarjeta de Consejo de Seguridad
-        card = MDCard(
-            orientation="vertical",
+        # Contenedor principal
+        root = MDBoxLayout(orientation='vertical')
+        scroll = MDScrollView(do_scroll_x=False)
+        content = MDBoxLayout(
+            orientation='vertical',
             padding=dp(16),
-            spacing=dp(12),
+            spacing=dp(22),
+            size_hint_y=None
+        )
+        content.bind(minimum_height=content.setter('height'))
+
+        # ==============================
+        # SECCIÓN: Consejo de Seguridad
+        # ==============================
+        consejo_card = MDCard(
+            orientation='vertical',
+            padding=(dp(24), dp(20)),
+            spacing=dp(14),
             radius=[20, 20, 20, 20],
-            elevation=3,
-            size_hint=(0.96, 0.9),
-            md_bg_color=(0.93, 1, 0.94, 1)
+            elevation=0,
+            size_hint=(0.96, None),
+            adaptive_height=True,
+            pos_hint={'center_x': 0.5},
+            md_bg_color=(0.95, 0.99, 0.95, 1)  # verde pastel muy suave
         )
 
-        card.add_widget(MDLabel(
+        # Contenedor interior para centrar todo
+        inner_box = MDBoxLayout(
+            orientation='vertical',
+            spacing=dp(12),
+            adaptive_height=True,
+            pos_hint={'center_x': 0.5}
+        )
+
+        # Título
+        inner_box.add_widget(MDLabel(
             text="Consejo de Seguridad",
             font_style="H6",
             halign="center",
+            bold=True,
             theme_text_color="Primary"
         ))
 
+        # Texto del consejo
         self.label_consejo = MDLabel(
             text=random.choice(CONSEJOS),
-            font_style="Body1",
             halign="center",
-            theme_text_color="Secondary"
+            font_style="Body1",
+            theme_text_color="Secondary",
+            size_hint_y=None,
+            height=dp(40)
         )
-        card.add_widget(self.label_consejo)
+        inner_box.add_widget(self.label_consejo)
 
+        # Línea separadora
+        from kivy.uix.widget import Widget
+        from kivy.graphics import Color, Rectangle
+        divider = Widget(size_hint_y=None, height=dp(1))
+        with divider.canvas.before:
+            Color(0.8, 0.9, 0.8, 1)
+            self.rect = Rectangle(size=divider.size, pos=divider.pos)
+        divider.bind(pos=lambda inst, val: setattr(self.rect, 'pos', inst.pos))
+        divider.bind(size=lambda inst, val: setattr(self.rect, 'size', inst.size))
+        inner_box.add_widget(divider)
+
+        # Botón centrado
         btn_nuevo = MDRaisedButton(
             text="Nuevo consejo",
-            icon="lightbulb-on-outline",
-            md_bg_color=(0.18, 0.58, 0.18, 1),
+            md_bg_color=(0.15, 0.6, 0.15, 1),
             text_color=(1, 1, 1, 1),
-            pos_hint={"center_x": 0.5},
             size_hint=(None, None),
-            size=(dp(140), dp(40)),
+            size=(dp(180), dp(44)),
+            pos_hint={'center_x': 0.5},
             on_release=self.nuevo_consejo
         )
-        card.add_widget(btn_nuevo)
+        inner_box.add_widget(btn_nuevo)
 
-        top_container = MDBoxLayout(size_hint_y=0.38, padding=(dp(8), dp(8)))
-        top_container.add_widget(card)
+        consejo_card.add_widget(inner_box)
+        content.add_widget(consejo_card)
 
-        # --- Noticias (parte inferior) ---
-        bottom_scroll = MDScrollView(size_hint_y=0.62)
-        bottom_container = MDBoxLayout(orientation='vertical', padding=(dp(8), dp(8)), spacing=dp(8), size_hint_y=None)
-        bottom_container.bind(minimum_height=bottom_container.setter('height'))
-
-        noticias_card = MDCard(
-            orientation="vertical",
-            padding=dp(12),
-            spacing=dp(10),
-            radius=[16, 16, 16, 16],
-            elevation=2,
-            size_hint=(0.96, None),
-            md_bg_color=(0.9, 0.96, 1, 1)
-        )
-
-        noticias_card.add_widget(MDLabel(
+        # ==============================
+        # SECCIÓN: Noticias y Leyes
+        # ==============================
+        content.add_widget(MDLabel(
             text="Noticias y Leyes del Ciclismo",
             font_style="H6",
             halign="left",
+            size_hint_y=None,
+            height=dp(32),
             theme_text_color="Primary"
         ))
 
         noticias = [
             {
-                "titulo": "Ley de Convivencia Vial",
-                "desc": "Cómo protege a los ciclistas en la vía pública.",
-                "link": "https://www.mtt.gob.cl/leydeconvivenciavial",
-                "icon": "gavel"
+                'titulo': 'Ley de Convivencia Vial',
+                'desc': 'Cómo protege a los ciclistas en la vía pública.',
+                'link': 'https://www.mtt.gob.cl/leydeconvivenciavial',
+                'icon': 'gavel'
             },
             {
-                "titulo": "Consejos MTT para ciclistas",
-                "desc": "Recomendaciones oficiales del Ministerio de Transportes.",
-                "link": "https://www.mtt.gob.cl/seguridadvial/ciclistas",
-                "icon": "bike"
+                'titulo': 'Consejos MTT para ciclistas',
+                'desc': 'Recomendaciones oficiales del Ministerio de Transportes.',
+                'link': 'https://www.mtt.gob.cl/seguridadvial/ciclistas',
+                'icon': 'bike'
             },
             {
-                "titulo": "Infraestructura ciclista - Noticias",
-                "desc": "Actualizaciones sobre ciclovías y proyectos locales.",
-                "link": "https://www.latercera.com/",
-                "icon": "newspaper"
+                'titulo': 'Infraestructura ciclista - Noticias',
+                'desc': 'Actualizaciones sobre ciclovías y proyectos locales.',
+                'link': 'https://www.latercera.com/',
+                'icon': 'newspaper'
             }
         ]
 
-        noticias_list = MDBoxLayout(orientation='vertical', spacing=dp(8), padding=(0, dp(8)), size_hint_y=None)
-        noticias_list.bind(minimum_height=noticias_list.setter('height'))
-
         for item in noticias:
-            entry = MDCard(orientation='horizontal', padding=dp(8), size_hint=(1, None), height=dp(72), elevation=1)
+            card = MDCard(
+                orientation='horizontal',
+                padding=(dp(12), dp(10)),
+                spacing=dp(10),
+                size_hint=(0.96, None),
+                height=dp(80),
+                radius=[14, 14, 14, 14],
+                elevation=0,
+                pos_hint={'center_x': 0.5},
+                md_bg_color=(0.96, 0.98, 1, 1)
+            )
 
-            left = MDBoxLayout(orientation='vertical', size_hint=(0.82, 1))
-            left.add_widget(MDLabel(text=item['titulo'], font_style='Subtitle1', halign='left'))
-            left.add_widget(MDLabel(text=item['desc'], font_style='Caption', halign='left', theme_text_color='Secondary'))
-            entry.add_widget(left)
+            left = MDBoxLayout(orientation='vertical', spacing=dp(4))
+            left.add_widget(MDLabel(
+                text=item['titulo'],
+                font_style='Subtitle1',
+                theme_text_color='Primary'
+            ))
+            left.add_widget(MDLabel(
+                text=item['desc'],
+                font_style='Caption',
+                theme_text_color='Secondary'
+            ))
 
-            btn = MDIconButton(icon=item.get('icon', 'open-in-new'), pos_hint={'center_y': 0.5}, on_release=lambda inst, url=item['link']: webbrowser.open(url))
-            entry.add_widget(btn)
+            icon_btn = MDIconButton(
+                icon=item['icon'],
+                pos_hint={'center_y': 0.5},
+                on_release=lambda inst, url=item['link']: webbrowser.open(url)
+            )
 
-            noticias_list.add_widget(entry)
+            card.add_widget(left)
+            card.add_widget(icon_btn)
+            content.add_widget(card)
 
-        # Ajustar altura de noticias_card según contenido
-        noticias_card.add_widget(noticias_list)
+        # Botón inferior
+        content.add_widget(
+            MDRaisedButton(
+                text="Ver más noticias",
+                md_bg_color=(0.18, 0.6, 0.18, 1),
+                text_color=(1, 1, 1, 1),
+                size_hint=(None, None),
+                size=(dp(180), dp(44)),
+                pos_hint={'center_x': 0.5},
+                on_release=lambda x: webbrowser.open('https://www.mtt.gob.cl')
+            )
+        )
 
-        btn_more = MDRaisedButton(text="Ver más noticias", pos_hint={"center_x": 0.5}, size_hint=(None, None), size=(dp(160), dp(40)), on_release=lambda x: webbrowser.open('https://www.mtt.gob.cl'))
-        noticias_card.add_widget(btn_more)
+        # Espacio inferior
+        content.add_widget(MDBoxLayout(size_hint_y=None, height=dp(20)))
 
-        bottom_container.add_widget(noticias_card)
-        bottom_scroll.add_widget(bottom_container)
-
-        # Montar root
-        root.add_widget(top_container)
-        root.add_widget(bottom_scroll)
+        scroll.add_widget(content)
+        root.add_widget(scroll)
         self.add_widget(root)
 
+    # ==============================
+    # FUNCIÓN: cambiar consejo con animación
+    # ==============================
     def nuevo_consejo(self, instance):
-        self.label_consejo.text = random.choice(CONSEJOS)
+        new_text = random.choice(CONSEJOS)
+        anim = Animation(opacity=0, d=0.15)
+
+        def set_text(*args):
+            self.label_consejo.text = new_text
+
+        def fade_in(*args):
+            Animation(opacity=1, d=0.2).start(self.label_consejo)
+
+        anim.bind(on_complete=lambda *a: (set_text(), fade_in()))
+        anim.start(self.label_consejo)

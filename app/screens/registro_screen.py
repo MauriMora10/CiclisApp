@@ -29,7 +29,7 @@ class RegistroScreen(MDScreen):
         container.add_widget(logo_box)
 
         # Tarjeta centrada
-        card = MDCard(orientation="vertical", padding=dp(20), radius=[20], elevation=6,
+        card = MDCard(orientation="vertical", padding=dp(20), radius=[20], elevation=0,
                       size_hint=(None, None), size=(dp(320), dp(360)), pos_hint={"center_x": 0.5})
         card.add_widget(MDLabel(text="Registro de Usuario", font_style="H6", halign="center", theme_text_color="Primary"))
 

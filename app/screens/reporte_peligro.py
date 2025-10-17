@@ -23,8 +23,8 @@ class ReportePeligro(MDScreen):
         # Top bar con botón regresar
         self.toolbar = MDTopAppBar(title='Reportar peligro', left_action_items=[['arrow-left', lambda x: self.volver_principal(x)]])
         layout.add_widget(self.toolbar)
-
-        card = MDCard(orientation='vertical', padding=dp(12), radius=[12,12,12,12], elevation=6)
+        # Card con formulario para reporte
+        card = MDCard(orientation='vertical', padding=dp(12), radius=[12, 12, 12, 12], elevation=0)
         card.add_widget(MDLabel(text='Reportar peligro', font_style='H5', halign='center'))
 
         self.calle_field = MDTextField(hint_text='Nombre de la calle o zona', mode='rectangle')

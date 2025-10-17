@@ -50,7 +50,7 @@ class PantallaLogin(MDScreen):
             adaptive_height=True,
             width=dp(340),
             pos_hint={"center_x": 0.5},
-            elevation=10,
+            elevation=0,
             radius=[20, 20, 20, 20],
             md_bg_color=COLORES['superficie']
         )
@@ -89,7 +89,7 @@ class PantallaLogin(MDScreen):
             text_color=(1, 1, 1, 1),
             size_hint=(1, None),
             height=dp(48),
-            elevation=6
+            elevation=0
         )
         card.add_widget(btn_login)
 

@@ -53,7 +53,7 @@ class PantallaLogin(MDScreen):
             size_hint=(None, None),
             size=(dp(320), dp(380)),
             pos_hint={"center_x": 0.5},
-            elevation=12,
+            elevation=0,
             radius=[15, 15, 15, 15],
             md_bg_color=COLORES['superficie']
         )
@@ -93,7 +93,7 @@ class PantallaLogin(MDScreen):
             text_color=(1, 1, 1, 1),
             size_hint=(1, None),
             height=dp(48),
-            elevation=8
+            elevation=0
         )
         card.add_widget(btn_login)
         btn_demo = MDFlatButton(
