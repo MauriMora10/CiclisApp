@@ -15,7 +15,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'app')))
 from app.data.colores import COLORES
 from app.data.rutas import rutas_seguras
 from app.screens.consejos_screen import ConsejosScreen
-from app.screens.sos_screen import SOSScreen
+from app.screens.sos_screen import WeatherScreen
 from app.screens.checklist_screen import ChecklistScreen
 from app.screens.pantalla_mapa import PantallaMapa
 
@@ -66,6 +66,8 @@ class CiclismoApp(MDApp):
         sm.add_widget(MenuPrincipal())
         sm.add_widget(ReportePeligro())
         sm.add_widget(ListaReportes())
+        from app.screens.profile_screen import ProfileScreen
+        sm.add_widget(ProfileScreen())
         sm.current = 'login'
         return sm
 

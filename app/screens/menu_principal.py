@@ -26,9 +26,10 @@ class DrawerSeparator(Widget):
 from kivy.uix.screenmanager import ScreenManager
 from kivymd.uix.toolbar import MDTopAppBar
 from app.screens.consejos_screen import ConsejosScreen
-from app.screens.sos_screen import SOSScreen
+from app.screens.sos_screen import WeatherScreen
 from app.screens.checklist_screen import ChecklistScreen
 from app.screens.pantalla_mapa import PantallaMapa
+from app.screens.profile_screen import ProfileScreen
 from app.utils.ui import show_snackbar
 
 class MenuPrincipal(MDScreen):
@@ -53,9 +54,9 @@ class MenuPrincipal(MDScreen):
         tab_consejos = MDBottomNavigationItem(name='consejos', text='Consejos', icon='shield-check')
         tab_consejos.add_widget(ConsejosScreen())
         nav.add_widget(tab_consejos)
-        tab_sos = MDBottomNavigationItem(name='sos', text='SOS', icon='alert')
-        tab_sos.add_widget(SOSScreen())
-        nav.add_widget(tab_sos)
+        tab_weather = MDBottomNavigationItem(name='weather', text='Clima', icon='weather-partly-cloudy')
+        tab_weather.add_widget(WeatherScreen())
+        nav.add_widget(tab_weather)
         tab_checklist = MDBottomNavigationItem(name='checklist', text='Checklist', icon='check')
         tab_checklist.add_widget(ChecklistScreen())
         nav.add_widget(tab_checklist)
@@ -137,7 +138,8 @@ class MenuPrincipal(MDScreen):
             self.nav_drawer.set_state('close')
         except Exception:
             pass
-        show_snackbar("Perfil de usuario (próximamente)", allow_on_login=True)
+        if self.manager:
+            self.manager.current = 'profile'
 
     def show_ajustes(self):
         try:
