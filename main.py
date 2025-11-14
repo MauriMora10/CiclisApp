@@ -15,7 +15,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'app')))
 from app.data.colores import COLORES
 from app.data.rutas import rutas_seguras
 from app.screens.consejos_screen import ConsejosScreen
-from app.screens.sos_screen import WeatherScreen
+from app.screens.weather_screen import WeatherScreen
 from app.screens.checklist_screen import ChecklistScreen
 from app.screens.pantalla_mapa import PantallaMapa
 
@@ -72,14 +72,7 @@ class CiclismoApp(MDApp):
         return sm
 
     def on_start(self):
-        Clock.schedule_once(self.mostrar_bienvenida, 1)
-
-    def mostrar_bienvenida(self, *args):
-        # Mostrar snackbar en la parte inferior con mayor duración para asegurar visibilidad
-        try:
-            show_snackbar("Bienvenido a CiclisApp!", duration=4.0, pos_hint={'center_x': 0.5, 'y': 0.02})
-        except Exception:
-            show_snackbar("Bienvenido a CiclisApp!", duration=3.0)
+        pass
 
 if __name__ == "__main__":
     app = CiclismoApp()

@@ -1,76 +1,88 @@
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.toolbar import MDTopAppBar
-from kivymd.uix.card import MDCard
-from kivymd.uix.label import MDLabel
-from kivy.uix.image import Image
-from kivymd.uix.button import MDRaisedButton
-from kivymd.uix.scrollview import MDScrollView
-from kivy.metrics import dp
-import webbrowser
+from kivy_garden.mapview import MapView, MapMarker, MapLayer
+from kivy.graphics import Color, Line
+import requests
+
+
+class CicloviaLayer(MapLayer):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.lines = []
+
+    def reposition(self):
+        pass
+
+    def set_lines(self, coords):
+        self.lines = coords
+        self.canvas.clear()
+        with self.canvas:
+            Color(0, 0.4, 1, 1)  # azul ciclovías
+            for line_coords in self.lines:
+                points = []
+                for lat, lon in line_coords:
+                    x, y = self.parent.get_window_xy_from(lat, lon)
+                    points += [x, y]
+                if len(points) >= 4:
+                    Line(points=points, width=1.3)
+
 
 class PantallaMapa(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.name = 'mapa'
+        self.name = 'pantalla_mapa'
 
-        # Layout principal
-        self.layout = MDBoxLayout(orientation="vertical")
+        # Layout principal vertical
+        layout = MDBoxLayout(orientation='vertical')
 
-        # Barra superior (sin botón de regresar)
-        self.toolbar = MDTopAppBar(
+        # Barra superior con título
+        toolbar = MDTopAppBar(
             title="Mapa de Zonas Seguras",
-            elevation=0
+            elevation=4
         )
-        self.layout.add_widget(self.toolbar)
+        layout.add_widget(toolbar)
 
-        # Scroll para contenido
-        scroll = MDScrollView()
-
-        # Contenedor vertical dentro del scroll
-        content = MDBoxLayout(orientation="vertical", padding=dp(16), spacing=dp(16), size_hint_y=None)
-        content.bind(minimum_height=content.setter("height"))
-
-        card = MDCard(
-            orientation="vertical",
-            padding=dp(16),
-            radius=[20, 20, 20, 20],
-            elevation=0,
-            size_hint=(1, None),
-            adaptive_height=True
+        # MapView ocupando el resto del espacio
+        self.mapview = MapView(
+            zoom=13,
+            lat=-38.7359,
+            lon=-72.5904,
+            size_hint=(1, 1)
         )
+        layout.add_widget(self.mapview)
 
-        card_content = MDBoxLayout(orientation="vertical", spacing=dp(10), size_hint_y=None)
-        card_content.bind(minimum_height=card_content.setter("height"))
+        self.add_widget(layout)
 
-        card_content.add_widget(MDLabel(
-            text="Mapa de Ciclovías Temuco",
-            font_style="H6",
-            halign="center",
-            theme_text_color="Primary"
-        ))
+        # Capa de ciclovías
+        self.ciclovia_layer = CicloviaLayer()
+        self.mapview.add_layer(self.ciclovia_layer, mode="scatter")
 
-        card_content.add_widget(Image(
-            source="c:/Users/Mauricio/Desktop/mapa_ciclovias_temuco.png.png",
-            allow_stretch=True,
-            keep_ratio=True,
-            size_hint_y=None,
-            height=dp(300)
-        ))
+        # Descargar ciclovías desde OSM
+        self.obtener_ciclovias()
 
-        card_content.add_widget(MDRaisedButton(
-            text="Abrir mapa interactivo",
-            md_bg_color=(0.2, 0.6, 1, 1),
-            pos_hint={"center_x": 0.5},
-            size_hint=(None, None),
-            size=(dp(200), dp(40)),
-            on_release=lambda x: webbrowser.open("https://bicivias.cl/temuco/")
-        ))
+    def obtener_ciclovias(self):
+        query = """
+        [out:json][timeout:25];
+        (
+          way["highway"="cycleway"](around:15000,-38.7359,-72.5904);
+          relation["route"="bicycle"](around:15000,-38.7359,-72.5904);
+        );
+        out geom;
+        """
 
-        card.add_widget(card_content)
-        content.add_widget(card)
-        scroll.add_widget(content)
-        self.layout.add_widget(scroll)
-        self.add_widget(self.layout)
+        try:
+            r = requests.get("https://overpass-api.de/api/interpreter", params={"data": query})
+            data = r.json()
 
-    # El método de regreso se eliminó porque la pantalla no muestra el botón de volver
+            trazos = []
+
+            for el in data["elements"]:
+                if "geometry" in el:
+                    coords = [(g["lat"], g["lon"]) for g in el["geometry"]]
+                    trazos.append(coords)
+
+            self.ciclovia_layer.set_lines(trazos)
+
+        except Exception as e:
+            print("ERROR OSM:", e)

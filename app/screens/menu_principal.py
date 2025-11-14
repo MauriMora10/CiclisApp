@@ -26,7 +26,7 @@ class DrawerSeparator(Widget):
 from kivy.uix.screenmanager import ScreenManager
 from kivymd.uix.toolbar import MDTopAppBar
 from app.screens.consejos_screen import ConsejosScreen
-from app.screens.sos_screen import WeatherScreen
+from app.screens.weather_screen import WeatherScreen
 from app.screens.checklist_screen import ChecklistScreen
 from app.screens.pantalla_mapa import PantallaMapa
 from app.screens.profile_screen import ProfileScreen
