@@ -8,7 +8,6 @@ from kivymd.uix.button import MDRaisedButton
 from kivymd.uix.card import MDCard
 from kivy.clock import Clock
 from kivy.metrics import dp
-from kivy.graphics import Color, Rectangle
 import requests
 
 class WeatherScreen(MDScreen):
@@ -19,35 +18,31 @@ class WeatherScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.name = 'weather'
+        self.md_bg_color = (0.91, 0.945, 0.992, 1)  # Fondo azul suave Material 3
 
-        # Fondo con degradado suave (azul claro)
-        with self.canvas.before:
-            Color(0.8, 0.9, 1, 1)  # Azul claro superior
-            self.rect1 = Rectangle(size=self.size, pos=self.pos)
-            Color(1, 1, 1, 1)  # Blanco inferior
-            self.rect2 = Rectangle(size=self.size, pos=self.pos)
-        self.bind(size=self._update_rect, pos=self._update_rect)
+        # Layout principal
+        main_layout = MDBoxLayout(orientation='vertical', padding=dp(20), spacing=dp(20))
 
-        # Layout principal centrado
-        layout = MDBoxLayout(orientation='vertical', padding=dp(20), spacing=dp(15), size_hint=(1, 1))
+        # Contenedor para centrar la tarjeta
+        from kivy.uix.anchorlayout import AnchorLayout
+        card_container = AnchorLayout(anchor_x='center', anchor_y='center', size_hint=(1, 0.8))
 
         # Tarjeta centrada para información del clima
         self.weather_card = MDCard(
             size_hint=(0.9, None),
-            height=dp(220),
-            pos_hint={'center_x': 0.5},
-            elevation=1,  # Sombra mínima
-            radius=[dp(20), dp(20), dp(20), dp(20)],
-            md_bg_color=(1, 1, 1, 0.95)
+            height=dp(320),  # Altura fija para contener el contenido
+            elevation=1,  # Sombra suave Material 3
+            radius=[28, 28, 28, 28],
+            md_bg_color=(1, 1, 1, 1)
         )
 
-        card_layout = MDBoxLayout(orientation='vertical', padding=dp(20), spacing=dp(10))
+        card_layout = MDBoxLayout(orientation='vertical', padding=dp(25), spacing=dp(15))
 
         # Etiqueta de ciudad
         self.city_label = MDLabel(
             text='Ciudad: Cargando...',
             halign='center',
-            font_style='H5',
+            font_style='H6',
             theme_text_color='Primary'
         )
         card_layout.add_widget(self.city_label)
@@ -83,37 +78,32 @@ class WeatherScreen(MDScreen):
         self.weather_icon = MDLabel(
             text='🌤️',
             halign='center',
-            font_style='H4'
+            font_size=dp(50),
+            padding=[0, dp(10), 0, 0]
         )
         card_layout.add_widget(self.weather_icon)
 
         self.weather_card.add_widget(card_layout)
-        layout.add_widget(self.weather_card)
+        card_container.add_widget(self.weather_card)
+        main_layout.add_widget(card_container)
 
         # Botón para actualizar clima (debajo del card)
         update_button = MDRaisedButton(
             text='Actualizar clima',
             size_hint=(0.9, None),
-            height=dp(50),
+            height=dp(48),
             pos_hint={'center_x': 0.5},
             md_bg_color="#43A047",
             on_release=self.update_weather
         )
-        layout.add_widget(update_button)
+        main_layout.add_widget(update_button)
 
-        self.add_widget(layout)
+        self.add_widget(main_layout)
 
         # Detección automática de ciudad al iniciar
         self.detect_city()
         # Actualización automática cada 10 minutos
         Clock.schedule_interval(self.update_weather, 600)
-
-    def _update_rect(self, instance, value):
-        """Actualiza el degradado del fondo."""
-        self.rect1.size = self.size
-        self.rect1.pos = self.pos
-        self.rect2.size = (self.width, self.height / 2)
-        self.rect2.pos = (self.x, self.y + self.height / 2)
 
     def detect_city(self):
         """Detecta la ciudad automáticamente usando ipapi.co."""
