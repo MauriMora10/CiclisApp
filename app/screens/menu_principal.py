@@ -8,6 +8,10 @@ from kivymd.uix.label import MDLabel
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, Rectangle
+from kivymd.uix.dialog import MDDialog
+from kivymd.uix.button import MDFlatButton, MDRaisedButton
+from kivymd.uix.selectioncontrol import MDSwitch
+from kivy.app import App
 
 
 class DrawerSeparator(Widget):
@@ -153,7 +157,10 @@ class MenuPrincipal(MDScreen):
             self.nav_drawer.set_state('close')
         except Exception:
             pass
-        show_snackbar("Otras configuraciones (próximamente)", allow_on_login=True)
+        # Evitar abrir múltiples diálogos
+        if hasattr(self, 'config_dialog') and self.config_dialog:
+            return
+        self.abrir_dialogo_configuraciones()
 
     def ir_a_reporte(self):
         try:
@@ -180,3 +187,70 @@ class MenuPrincipal(MDScreen):
                 app_sm.current = 'login'
         except Exception:
             pass
+
+    def abrir_dialogo_configuraciones(self):
+        app = App.get_running_app()
+        if not hasattr(app, 'theme_cls'):
+            show_snackbar("Error: No se puede acceder al tema de la app")
+            return
+
+        # Crear el contenido del diálogo
+        content = MDBoxLayout(orientation='vertical', spacing=dp(20), padding=dp(24))
+
+        # Switch para modo nocturno
+        switch_layout = MDBoxLayout(
+            orientation='horizontal',
+            size_hint_y=None,
+            height=dp(48),
+            spacing=dp(16)
+        )
+
+        # Etiqueta
+        label = MDLabel(
+            text="Modo nocturno",
+            halign='left',
+            valign='middle',
+            font_style='Body1'
+        )
+        switch_layout.add_widget(label)
+
+        # Switch
+        self.switch_night_mode = MDSwitch()
+        self.switch_night_mode.bind(active=self.on_switch_night_mode)
+        switch_layout.add_widget(self.switch_night_mode)
+
+        # Set the initial state after the widget is created
+        self.switch_night_mode.active = (app.theme_cls.theme_style == "Dark")
+
+        content.add_widget(switch_layout)
+
+        # Botón de cerrar
+        self.config_dialog = MDDialog(
+            title="Configuraciones",
+            type="custom",
+            content_cls=content,
+            buttons=[
+                MDFlatButton(
+                    text="Cerrar",
+                    on_release=self.cerrar_dialogo_configuraciones
+                )
+            ],
+            size_hint=(0.9, None),
+            height=dp(150)
+        )
+        self.config_dialog.open()
+
+    def cerrar_dialogo_configuraciones(self, instance):
+        if hasattr(self, 'config_dialog') and self.config_dialog:
+            self.config_dialog.dismiss()
+            self.config_dialog = None
+
+    def on_switch_night_mode(self, instance, value):
+        app = App.get_running_app()
+        if hasattr(app, 'theme_cls'):
+            if value:
+                app.theme_cls.theme_style = "Dark"
+                show_snackbar("Modo nocturno activado")
+            else:
+                app.theme_cls.theme_style = "Light"
+                show_snackbar("Modo claro activado")

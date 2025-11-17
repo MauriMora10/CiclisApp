@@ -7,11 +7,13 @@ from kivymd.uix.selectioncontrol import MDCheckbox
 from kivymd.uix.progressbar import MDProgressBar
 from kivymd.uix.button import MDIconButton
 from kivymd.uix.scrollview import MDScrollView
+
 from kivy.metrics import dp
-from kivy.utils import get_color_from_hex
 from kivy.storage.jsonstore import JsonStore
 from kivy.animation import Animation
+from kivy.utils import get_color_from_hex
 from kivy.clock import Clock
+from kivy.app import App
 
 try:
     from plyer import vibrator
@@ -28,37 +30,42 @@ ITEMS = [
 
 
 class ChecklistScreen(MDScreen):
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.name = "checklist"
-        self.md_bg_color = get_color_from_hex("#E8FDE8")
 
-        # Archivo para guardar estado
+        # ============= TEMA DINÁMICO =============
+        app = App.get_running_app()
+        app.theme_cls.bind(theme_style=self.on_theme_change)
+
         self.store = JsonStore("checklist_data.json")
 
-        # --- SCROLLVIEW PARA TODO EL CONTENIDO ---
+        # Fondo dinámico según tema
+        self.update_background()
+
+        # ----------- SCROLLVIEW (contenido completo) -----------
         scroll = MDScrollView(size_hint=(1, 1))
 
-        # --- LAYOUT PRINCIPAL CENTRADO ---
         container = MDBoxLayout(
             orientation="vertical",
             spacing=dp(20),
             padding=[dp(20), dp(20), dp(20), dp(40)],
             size_hint_y=None,
-            adaptive_height=True
+            adaptive_height=True,
         )
 
-        # --- TARJETA ---
+        # ----------- CARD PRINCIPAL -----------
         self.card = MDCard(
             orientation="vertical",
             padding=dp(20),
             spacing=dp(20),
             radius=[28, 28, 28, 28],
-            elevation=2,
+            elevation=3,
             size_hint=(1, None),
-            adaptive_height=True,
-            md_bg_color=(1, 1, 1, 1)
+            adaptive_height=True
         )
+        self.update_card_color()
 
         # TÍTULO
         title = MDLabel(
@@ -71,29 +78,25 @@ class ChecklistScreen(MDScreen):
         )
         self.card.add_widget(title)
 
-        # LISTA DE ITEMS
+        # ----------- ITEMS LISTA -----------
         self.items_layout = MDBoxLayout(
             orientation="vertical",
-            spacing=dp(16),
-            size_hint_y=None,
+            spacing=dp(18),
             adaptive_height=True
         )
 
         self.checkboxes = []
+
         for text, icon in ITEMS:
 
             row = MDBoxLayout(
                 orientation="horizontal",
                 spacing=dp(12),
                 size_hint_y=None,
-                height=dp(50),
-                padding=[0, dp(8), 0, 0]
+                height=dp(48),
             )
 
-            checkbox = MDCheckbox(
-                size_hint=(None, None),
-                size=(dp(28), dp(28))
-            )
+            checkbox = MDCheckbox(size_hint=(None, None), size=(dp(28), dp(28)))
             checkbox.bind(active=self.on_checkbox_active)
             self.checkboxes.append(checkbox)
 
@@ -101,7 +104,7 @@ class ChecklistScreen(MDScreen):
                 icon=icon,
                 icon_size=dp(26),
                 theme_text_color="Custom",
-                text_color=get_color_from_hex("#43A047")
+                text_color=get_color_from_hex("#43A047"),
             )
 
             label = MDLabel(
@@ -119,13 +122,14 @@ class ChecklistScreen(MDScreen):
 
         self.card.add_widget(self.items_layout)
 
-        # PROGRESO
+        # ----------- PROGRESO -----------
+
         self.progress_label = MDLabel(
             text="Progreso: 0%",
             halign="center",
-            font_style="Body1",
+            theme_text_color="Secondary",
             size_hint_y=None,
-            height=dp(24)
+            height=dp(20),
         )
         self.card.add_widget(self.progress_label)
 
@@ -134,30 +138,30 @@ class ChecklistScreen(MDScreen):
             max=100,
             color=get_color_from_hex("#43A047"),
             size_hint_y=None,
-            height=dp(10)
+            height=dp(8)
         )
         self.card.add_widget(self.progress_bar)
 
-        # BOTONES
+        # ----------- BOTONES -----------
         buttons_row = MDBoxLayout(
             orientation="horizontal",
-            spacing=dp(16),
+            spacing=dp(12),
             size_hint_y=None,
-            height=dp(52)
+            height=dp(52),
         )
 
         self.btn_revisar = MDRaisedButton(
             text="Revisar",
-            md_bg_color=get_color_from_hex("#43A047"),
             size_hint=(1, 1),
-            on_release=self.revisar
+            md_bg_color=app.theme_cls.primary_color,
+            on_release=self.revisar,
         )
 
         self.btn_toggle = MDFlatButton(
             text="Seleccionar todo",
-            text_color=get_color_from_hex("#1E88E5"),
             size_hint=(1, 1),
-            on_release=self.toggle_all
+            text_color=get_color_from_hex("#1E88E5"),
+            on_release=self.toggle_all,
         )
 
         buttons_row.add_widget(self.btn_revisar)
@@ -165,30 +169,56 @@ class ChecklistScreen(MDScreen):
 
         self.card.add_widget(buttons_row)
 
-        # Agregar card al contenedor
         container.add_widget(self.card)
-
-        # Agregar contenedor al scroll
         scroll.add_widget(container)
         self.add_widget(scroll)
 
+        # Cargar estado guardado
         Clock.schedule_once(lambda dt: self.cargar_estado())
 
-    # ---------------------------
-    # EVENTS
-    # ---------------------------
+    # =========================================================
+    # ----------- TEMA DINÁMICO (LIGHT/DARK) -----------------
+    # =========================================================
+    def update_background(self):
+        app = App.get_running_app()
+        if app.theme_cls.theme_style == "Dark":
+            self.md_bg_color = (0.05, 0.05, 0.05, 1)  # negro puro suave
+        else:
+            self.md_bg_color = get_color_from_hex("#E8FDE8")
+
+    def update_card_color(self):
+        app = App.get_running_app()
+        if app.theme_cls.theme_style == "Dark":
+            self.card.md_bg_color = (0.15, 0.15, 0.15, 1)  # gris oscuro Material 3
+        else:
+            self.card.md_bg_color = (1, 1, 1, 1)
+
+    def on_theme_change(self, *args):
+        self.update_background()
+        self.update_card_color()
+
+        # Ajustar botón según tema
+        app = App.get_running_app()
+        self.btn_revisar.md_bg_color = app.theme_cls.primary_color
+
+        # refrescar colores de labels dinámicamente
+        for child in self.walk():
+            if isinstance(child, MDLabel):
+                if child.theme_text_color == "Primary":
+                    child.text_color = (1, 1, 1, 0.87) if app.theme_cls.theme_style == "Dark" else (0.1, 0.1, 0.1, 1)
+                elif child.theme_text_color == "Secondary":
+                    child.text_color = (1, 1, 1, 0.6) if app.theme_cls.theme_style == "Dark" else (0.4, 0.4, 0.4, 1)
+
+    # =========================================================
+    # ------------------- LÓGICA CHECKLIST --------------------
+    # =========================================================
+
     def on_checkbox_active(self, *args):
         self.actualizar_progreso()
         self.guardar_estado()
 
-    # ---------------------------
-    # GUARDAR / CARGAR
-    # ---------------------------
     def guardar_estado(self):
-        self.store.put(
-            "checklist",
-            **{str(i): cb.active for i, cb in enumerate(self.checkboxes)}
-        )
+        self.store.put("checklist", **{str(i): cb.active for i, cb in enumerate(self.checkboxes)})
 
     def cargar_estado(self):
         if self.store.exists("checklist"):
@@ -197,12 +227,8 @@ class ChecklistScreen(MDScreen):
                 cb.active = data.get(str(i), False)
         self.actualizar_progreso()
 
-    # ---------------------------
-    # TOGGLE ALL
-    # ---------------------------
     def toggle_all(self, *args):
         all_checked = all(cb.active for cb in self.checkboxes)
-
         for cb in self.checkboxes:
             cb.active = not all_checked
 
@@ -211,9 +237,6 @@ class ChecklistScreen(MDScreen):
         self.actualizar_progreso()
         self.guardar_estado()
 
-    # ---------------------------
-    # PROGRESO
-    # ---------------------------
     def actualizar_progreso(self):
         total = len(self.checkboxes)
         done = sum(cb.active for cb in self.checkboxes)
@@ -223,16 +246,13 @@ class ChecklistScreen(MDScreen):
         self.progress_bar.value = pct
 
         if pct == 100:
-            Animation(md_bg_color=(0.9, 1, 0.9, 1), duration=0.3).start(self.card)
+            Animation(md_bg_color=(0.8, 1, 0.8, 1), duration=0.3).start(self.card)
             if vibrator:
                 try:
                     vibrator.vibrate(0.1)
                 except:
                     pass
 
-    # ---------------------------
-    # REVISAR
-    # ---------------------------
     def revisar(self, *args):
         from app.utils.ui import show_snackbar
 

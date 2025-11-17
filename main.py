@@ -18,6 +18,7 @@ from app.screens.consejos_screen import ConsejosScreen
 from app.screens.weather_screen import WeatherScreen
 from app.screens.checklist_screen import ChecklistScreen
 from app.screens.pantalla_mapa import PantallaMapa
+from kivy.app import App
 
 consejos_seguridad = [
     {"titulo": "Uso del casco", "descripcion": "Usa casco siempre - reduce 85% el riesgo de lesiones", "icono": "shield-check"},
@@ -54,6 +55,9 @@ usuarios_db = {
 class CiclismoApp(MDApp):
     def build(self):
         self.theme_cls.primary_palette = "Green"
+        # Set theme colors for better dark mode support
+        self.theme_cls.theme_style = "Light"  # Default to light theme
+
         from app.screens.login_screen import LoginScreen
         from app.screens.registro_screen import RegistroScreen
         from app.screens.menu_principal import MenuPrincipal
