@@ -60,11 +60,14 @@ class LoginScreen(MDScreen):
         contrasena = self.pass_field.text.strip()
         if usuario == "" or contrasena == "":
             show_snackbar("Completa todos los campos")
-        elif usuario == "admin" and contrasena == "123":
-            show_snackbar("¡Bienvenido, admin!")
-            self.manager.current = 'principal'
         else:
-            show_snackbar("Usuario o contraseña incorrectos")
+            from main import load_users
+            users = load_users()
+            if usuario in users and users[usuario]["password"] == contrasena:
+                show_snackbar(f"¡Bienvenido, {users[usuario]['nombre']}!")
+                self.manager.current = 'principal'
+            else:
+                show_snackbar("Usuario o contraseña incorrectos")
 
 
     def ir_a_registro(self, instance):

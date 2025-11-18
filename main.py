@@ -46,11 +46,32 @@ estadisticas_usuario = {
     "mejor_tiempo": 42
 }
 
-usuarios_db = {
-    "admin": {"password": "123", "nombre": "Administrador", "email": "admin@ciclotemuco.cl"},
-    "usuario": {"password": "456", "nombre": "María González", "email": "maria@email.com"},
-    "ciclista": {"password": "789", "nombre": "Carlos Pérez", "email": "carlos@email.com"}
-}
+def load_users():
+    import json
+    if os.path.exists('user_data.json'):
+        with open('user_data.json', 'r') as f:
+            return json.load(f)
+    return {}
+
+def save_users(users):
+    import json
+    with open('user_data.json', 'w') as f:
+        json.dump(users, f, indent=4)
+
+# Inicializar usuarios si no existen
+if not os.path.exists('user_data.json'):
+    initial_users = {
+        "admin": {"password": "123", "email": "admin@ciclotemuco.cl", "nombre": "Administrador"},
+        "usuario": {"password": "456", "email": "maria@email.com", "nombre": "María González"},
+        "ciclista": {"password": "789", "email": "carlos@email.com", "nombre": "Carlos Pérez"}
+    }
+    save_users(initial_users)
+else:
+    # Asegurar que los usuarios iniciales estén presentes si el archivo existe pero está vacío
+    users = load_users()
+    if not users:
+        users = initial_users
+        save_users(users)
 
 class CiclismoApp(MDApp):
     def build(self):

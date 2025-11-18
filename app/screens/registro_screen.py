@@ -62,14 +62,26 @@ class RegistroScreen(MDScreen):
         email = self.email_field.text.strip()
         contrasena = self.pass_field.text.strip()
 
-        from kivymd.uix.label import MDLabel
+        import json
+        from main import load_users, save_users
+
         if usuario == "" or email == "" or contrasena == "":
             show_snackbar("Completa todos los campos")
         elif "@" not in email or "." not in email:
             show_snackbar("Email inválido")
         else:
-            show_snackbar("¡Registro exitoso! Ahora puedes iniciar sesión.")
-            self.manager.current = 'login'
+            users = load_users()
+            if usuario in users:
+                show_snackbar("Usuario ya existe")
+            else:
+                users[usuario] = {
+                    "password": contrasena,
+                    "email": email,
+                    "nombre": usuario  # Usando el usuario como nombre por defecto
+                }
+                save_users(users)
+                show_snackbar("¡Registro exitoso! Ahora puedes iniciar sesión.")
+                self.manager.current = 'login'
 
     def volver_login(self, instance):
         self.manager.current = 'login'
