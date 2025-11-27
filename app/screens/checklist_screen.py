@@ -61,7 +61,7 @@ class ChecklistScreen(MDScreen):
             padding=dp(20),
             spacing=dp(20),
             radius=[28, 28, 28, 28],
-            elevation=3,
+            elevation=1,
             size_hint=(1, None),
             adaptive_height=True
         )

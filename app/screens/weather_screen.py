@@ -9,6 +9,7 @@ from kivymd.uix.card import MDCard
 from kivy.clock import Clock
 from kivy.metrics import dp
 from kivy.app import App
+from kivy.uix.image import AsyncImage
 import requests
 
 
@@ -40,9 +41,9 @@ class WeatherScreen(MDScreen):
 
         self.weather_card = MDCard(
             size_hint=(0.9, None),
-            height=dp(330),
+            height=dp(400),
             radius=[28, 28, 28, 28],
-            elevation=3,
+            elevation=1,
         )
 
         self.update_card_color()  # color dinámico según tema
@@ -82,11 +83,14 @@ class WeatherScreen(MDScreen):
             theme_text_color="Secondary",
         )
 
-        self.weather_icon = MDLabel(
-            text="🌤️",
-            halign="center",
-            font_size=dp(50),
+        # Icono centrado
+        icon_container = AnchorLayout(anchor_x="center", anchor_y="center", size_hint_y=None, height=dp(120))
+        self.weather_icon = AsyncImage(
+            source="http://openweathermap.org/img/wn/01d@2x.png",
+            size_hint=(None, None),
+            size=(dp(100), dp(100)),
         )
+        icon_container.add_widget(self.weather_icon)
 
         # Agregar al card
         for widget in [
@@ -94,7 +98,7 @@ class WeatherScreen(MDScreen):
             self.temp_label,
             self.temp_min_max_label,
             self.desc_label,
-            self.weather_icon,
+            icon_container,
         ]:
             card_layout.add_widget(widget)
 
@@ -115,8 +119,8 @@ class WeatherScreen(MDScreen):
 
         self.add_widget(self.main_layout)
 
-        # Cargar datos iniciales
-        self.detect_city()
+        # Cargar datos iniciales para Temuco
+        self.update_weather()
         Clock.schedule_interval(self.update_weather, 600)
 
     # =============================================================
@@ -161,22 +165,12 @@ class WeatherScreen(MDScreen):
     # =============================================================
     # API CLIMA
     # =============================================================
-    def detect_city(self):
-        try:
-            response = requests.get("https://ipapi.co/json/", timeout=10)
-            if response.status_code == 200:
-                data = response.json()
-                self.current_city = data.get("city", "Temuco")
-            else:
-                self.current_city = "Temuco"
-        except:
-            self.current_city = "Temuco"
 
-        self.update_weather()
 
     def update_weather(self, dt=None):
         try:
-            url = f"http://api.openweathermap.org/data/2.5/weather?q={self.current_city}&appid={self.API_KEY}&units=metric&lang=es"
+            # Ciudad fija: Temuco
+            url = f"http://api.openweathermap.org/data/2.5/weather?q=Temuco&appid={self.API_KEY}&units=metric&lang=es"
             resp = requests.get(url, timeout=10)
             data = resp.json()
 
@@ -190,7 +184,7 @@ class WeatherScreen(MDScreen):
                 icon_code = data["weather"][0]["icon"]
 
                 self.desc_label.text = f"Descripción: {desc}"
-                self.weather_icon.text = self.get_weather_emoji(icon_code)
+                self.weather_icon.source = f"http://openweathermap.org/img/wn/{icon_code}@2x.png"
 
             elif resp.status_code == 404:
                 self.show_message("Ciudad no encontrada.")
@@ -199,32 +193,16 @@ class WeatherScreen(MDScreen):
 
         except Exception:
             self.show_message("Error de conexión.")
+            # Fallback para Temuco si la API falla
+            self.city_label.text = "Ciudad: Temuco"
+            self.temp_label.text = "Temperatura: N/A"
+            self.temp_min_max_label.text = "Mín/Máx: N/A"
+            self.desc_label.text = "Descripción: Sin conexión"
+            self.weather_icon.source = "http://openweathermap.org/img/wn/01d@2x.png"
 
     # =============================================================
     # ICONOS
     # =============================================================
-    def get_weather_emoji(self, code):
-        icon_map = {
-            "01d": "☀️",
-            "01n": "🌙",
-            "02d": "⛅",
-            "02n": "☁️",
-            "03d": "☁️",
-            "03n": "☁️",
-            "04d": "☁️",
-            "04n": "☁️",
-            "09d": "🌦️",
-            "09n": "🌦️",
-            "10d": "🌧️",
-            "10n": "🌧️",
-            "11d": "⛈️",
-            "11n": "⛈️",
-            "13d": "❄️",
-            "13n": "❄️",
-            "50d": "🌫️",
-            "50n": "🌫️",
-        }
-        return icon_map.get(code, "🌤️")
 
     def show_message(self, msg):
         try:
@@ -232,3 +210,5 @@ class WeatherScreen(MDScreen):
             show_snackbar(msg, duration=3)
         except:
             print(msg)
+
+
