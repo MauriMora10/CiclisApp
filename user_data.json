@@ -1,22 +1,7 @@
 {
-    "admin": {
-        "password": "123",
-        "email": "admin@ciclotemuco.cl",
-        "nombre": "Administrador"
-    },
-    "usuario": {
-        "password": "456",
-        "email": "maria@email.com",
-        "nombre": "Mar\u00c3\u00ada Gonz\u00c3\u00a1lez"
-    },
-    "ciclista": {
-        "password": "789",
-        "email": "carlos@email.com",
-        "nombre": "Carlos P\u00c3\u00a9rez"
-    },
-    "Mauricio": {
-        "password": "123456",
-        "email": "mauro@gmail.com",
-        "nombre": "Mauricio"
-    }
+    "nombre": "",
+    "email": "",
+    "ciudad": "",
+    "telefono": "",
+    "foto": ""
 }
