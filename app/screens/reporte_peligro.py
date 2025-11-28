@@ -4,13 +4,16 @@ from kivymd.uix.card import MDCard
 from kivymd.uix.textfield import MDTextField
 from kivymd.uix.button import MDRaisedButton, MDRectangleFlatIconButton
 from kivymd.uix.dialog import MDDialog
-from kivymd.uix.filemanager import MDFileManager
 from kivymd.uix.label import MDLabel
 from kivy.metrics import dp
 from app.utils.ui import show_snackbar
 from datetime import datetime
 import os
 import json
+import platform
+if platform.system() == 'Windows':
+    import tkinter as tk
+    from tkinter import filedialog
 
 FILE_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'reportes_peligro.json')
 
@@ -59,14 +62,14 @@ class ReportePeligro(MDScreen):
 
         # Campo: Calle
         self.calle_field = MDTextField(
-            hint_text='Nombre de la calle o zona',
+            hint_text='Calle o zona',
             mode='rectangle'
         )
         card.add_widget(self.calle_field)
 
         # Campo: Tipo de peligro
         self.tipo_field = MDTextField(
-            hint_text='Tipo de peligro (ej: bache, falta de ciclovía)',
+            hint_text='Tipo de peligro (ej: bache, ciclovía)',
             mode='rectangle'
         )
         card.add_widget(self.tipo_field)
@@ -89,6 +92,29 @@ class ReportePeligro(MDScreen):
         )
         card.add_widget(self.imagen_label)
 
+        # Contenedor para botones de imagen
+        image_buttons_layout = MDBoxLayout(
+            orientation='horizontal',
+            spacing=dp(8),
+            size_hint_y=None,
+            height=dp(40)
+        )
+        self.btn_view_image = MDRectangleFlatIconButton(
+            text='Ver imagen',
+            icon='eye',
+            on_release=self.view_image,
+            disabled=True
+        )
+        self.btn_delete_image = MDRectangleFlatIconButton(
+            text='Eliminar',
+            icon='delete',
+            on_release=self.delete_image,
+            disabled=True
+        )
+        image_buttons_layout.add_widget(self.btn_view_image)
+        image_buttons_layout.add_widget(self.btn_delete_image)
+        card.add_widget(image_buttons_layout)
+
         # Botón de selección de imagen
         btn_select_image = MDRectangleFlatIconButton(
             text='Seleccionar imagen',
@@ -98,7 +124,7 @@ class ReportePeligro(MDScreen):
             text_color=(1, 1, 1, 1),
             theme_icon_color="Custom",
             icon_color=(1, 1, 1, 1),
-            on_release=self.abrir_filemanager
+            on_release=self.select_image
         )
         card.add_widget(btn_select_image)
 
@@ -115,12 +141,6 @@ class ReportePeligro(MDScreen):
         layout.add_widget(card)
         self.add_widget(layout)
 
-        # File Manager inicializado
-        self.file_manager = MDFileManager(
-            exit_manager=self.exit_manager,
-            select_path=self.select_path,
-            ext=['.png', '.jpg', '.jpeg', '.gif', '.bmp']
-        )
         self.selected_image_path = None
 
     # --- Volver a la pantalla principal ---
@@ -169,28 +189,62 @@ class ReportePeligro(MDScreen):
             )
             dialog.open()
 
+            # Recargar la lista de reportes en la pantalla lista_reportes
+            if self.manager:
+                lista_screen = self.manager.get_screen('lista_reportes')
+                if lista_screen:
+                    lista_screen.load_reportes()
+
             # Limpiar campos
             self.calle_field.text = ''
             self.tipo_field.text = ''
             self.desc_field.text = ''
             self.imagen_label.text = 'Imagen: Ninguna seleccionada'
             self.selected_image_path = None
+            self.btn_view_image.disabled = True
+            self.btn_delete_image.disabled = True
 
         except Exception as e:
             show_snackbar(f'Error guardando el reporte: {e}')
 
-    # --- Abrir el gestor de archivos ---
-    def abrir_filemanager(self, instance):
-        self.file_manager.show(os.path.expanduser('~'))
-
     # --- Seleccionar imagen ---
-    def select_path(self, path):
-        self.selected_image_path = path
-        self.imagen_label.text = f'Imagen: {os.path.basename(path)}'
-        self.exit_manager()
+    def select_image(self, instance):
+        if platform.system() == 'Windows':
+            root = tk.Tk()
+            root.withdraw()  # Hide the main window
+            file_path = filedialog.askopenfilename(
+                title='Seleccionar imagen',
+                filetypes=[('Archivos de imagen', '*.png *.jpg *.jpeg *.gif *.bmp')]
+            )
+            root.destroy()
+            if file_path:
+                self.selected_image_path = file_path
+                self.imagen_label.text = f'Imagen: {os.path.basename(file_path)}'
+                self.btn_view_image.disabled = False
+                self.btn_delete_image.disabled = False
+        else:
+            show_snackbar('Esta funcionalidad solo está disponible en Windows')
 
-    def exit_manager(self, *args):
-        self.file_manager.close()
+    # --- Ver imagen ---
+    def view_image(self, instance):
+        if self.selected_image_path and os.path.exists(self.selected_image_path):
+            if platform.system() == 'Windows':
+                os.startfile(self.selected_image_path)
+            else:
+                show_snackbar('Esta funcionalidad solo está disponible en Windows')
+        else:
+            show_snackbar('No hay imagen seleccionada o el archivo no existe')
+
+    # --- Eliminar imagen ---
+    def delete_image(self, instance):
+        if self.selected_image_path:
+            self.selected_image_path = None
+            self.imagen_label.text = 'Imagen: Ninguna seleccionada'
+            self.btn_view_image.disabled = True
+            self.btn_delete_image.disabled = True
+            show_snackbar('Imagen eliminada')
+        else:
+            show_snackbar('No hay imagen seleccionada')
 
     # --- Listar reportes guardados ---
     def listar_reportes(self):

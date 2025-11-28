@@ -3,5 +3,10 @@
     "email": "",
     "ciudad": "",
     "telefono": "",
-    "foto": ""
+    "foto": "",
+    "Mauricio": {
+        "password": "123456",
+        "email": "mmora2024@alu.uct.cl",
+        "nombre": "Mauricio"
+    }
 }

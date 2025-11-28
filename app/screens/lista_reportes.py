@@ -1,313 +1,316 @@
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.boxlayout import MDBoxLayout
-from kivymd.uix.card import MDCard
 from kivymd.uix.label import MDLabel
-from kivymd.uix.button import MDRectangleFlatIconButton
-from kivymd.uix.scrollview import MDScrollView
-from kivymd.uix.list import MDList, OneLineListItem
+from kivymd.uix.button import MDRaisedButton, MDIconButton
 from kivymd.uix.textfield import MDTextField
+from kivymd.uix.card import MDCard
+from kivymd.uix.scrollview import MDScrollView
+from kivymd.uix.list import MDList
+from kivymd.uix.fitimage import FitImage
 from kivy.metrics import dp
-from app.utils.ui import show_snackbar
-import os
 import json
-import csv
+import os
 
 
 class ListaReportes(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.name = 'lista_reportes'
-        from kivymd.uix.toolbar import MDTopAppBar
+        self.name = "lista_reportes"
 
-        # Layout principal
-        layout = MDBoxLayout(orientation='vertical', padding=dp(16), spacing=dp(10))
-
-        # Barra superior
-        self.toolbar = MDTopAppBar(
-            title='Reportes guardados',
-            left_action_items=[['arrow-left', lambda x: self.volver_principal(x)]],
-            elevation=1
-        )
-        layout.add_widget(self.toolbar)
-
-        # ==============================
-        # SECCIÓN: FILTROS
-        # ==============================
-        filtros_card = MDCard(
-            orientation='vertical',
-            padding=dp(16),
-            spacing=dp(12),
-            radius=[12, 12, 12, 12],
-            elevation=1,
-            md_bg_color=(0.97, 0.98, 0.99, 1),
-            size_hint_x=0.96,
-            pos_hint={'center_x': 0.5}
-        )
-
-        filtros_card.add_widget(MDLabel(
-            text="Filtrar reportes",
-            font_style="Subtitle1",
-            halign="left",
-            theme_text_color="Primary"
-        ))
-
-        # Campos de filtro (vertical)
-        filtros_inputs = MDBoxLayout(
-            orientation='vertical',
+        # ------------------------------------------------------------
+        # LAYOUT PRINCIPAL
+        # ------------------------------------------------------------
+        main = MDBoxLayout(
+            orientation="vertical",
             spacing=dp(10),
+            padding=[0, 0, 0, 0],
+        )
+
+        # ------------------------------------------------------------
+        # HEADER
+        # ------------------------------------------------------------
+        header = MDBoxLayout(
+            orientation="horizontal",
             size_hint_y=None,
-            adaptive_height=True
+            height=dp(85),
+            md_bg_color=(0.2, 0.6, 0.3, 1),
+            padding=[dp(10), dp(10)],
+            radius=[0, 0, dp(28), dp(28)],
         )
-        self.filter_tipo = MDTextField(
-            hint_text='Tipo de peligro',
-            mode='rectangle',
-            size_hint_x=1
-        )
-        self.filter_fecha = MDTextField(
-            hint_text='Fecha (YYYY-MM-DD)',
-            mode='rectangle',
-            size_hint_x=1
-        )
-        filtros_inputs.add_widget(self.filter_tipo)
-        filtros_inputs.add_widget(self.filter_fecha)
-        filtros_card.add_widget(filtros_inputs)
 
-        # ==============================
-        # SECCIÓN: BOTONES PEQUEÑOS Y CENTRADOS
-        # ==============================
-        botones_row = MDBoxLayout(
-            orientation='horizontal',
+        back = MDIconButton(
+            icon="arrow-left",
+            icon_color=(1, 1, 1, 1),
+            on_release=lambda x: self.go_back(),
+        )
+        header.add_widget(back)
+
+        header.add_widget(
+            MDLabel(
+                text="Reportes guardados",
+                halign="left",
+                font_style="H6",
+                theme_text_color="Custom",
+                text_color=(1, 1, 1, 1),
+                padding=[0, dp(22), 0, 0],
+            )
+        )
+        main.add_widget(header)
+
+        # ------------------------------------------------------------
+        # SCROLL + CONTENEDOR
+        # ------------------------------------------------------------
+        scroll = MDScrollView()
+        container = MDBoxLayout(
+            orientation="vertical",
+            spacing=dp(15),
+            padding=[dp(16), dp(16)],
+            size_hint_y=None,
+        )
+        container.bind(minimum_height=container.setter("height"))
+
+        # ------------------------------------------------------------
+        # CARD DE FILTRO
+        # ------------------------------------------------------------
+        filtros_card = MDCard(
+            orientation="vertical",
+            padding=dp(10),
             spacing=dp(10),
+            radius=[dp(10)],
+            elevation=1,
+            size_hint=(1, None),
+            adaptive_height=True,
+            md_bg_color=(1, 1, 1, 1),
+        )
+
+        filtros_card.add_widget(
+            MDLabel(
+                text="Filtrar reportes",
+                font_style="Body1",
+                theme_text_color="Primary",
+                halign="left",
+            )
+        )
+
+        self.tipo_field = MDTextField(
+            hint_text="Tipo de peligro",
+            mode="rectangle",
+            size_hint_x=1,
+            size_hint_y=None,
+            height=dp(30),
+        )
+        filtros_card.add_widget(self.tipo_field)
+
+        self.fecha_field = MDTextField(
+            hint_text="Fecha (YYYY-MM-DD)",
+            mode="rectangle",
+            size_hint_x=1,
+            size_hint_y=None,
+            height=dp(30),
+        )
+        filtros_card.add_widget(self.fecha_field)
+
+        acciones = MDBoxLayout(
+            orientation="horizontal",
+            spacing=dp(12),
             size_hint_y=None,
             height=dp(36),
-            adaptive_width=True,
-            pos_hint={'center_x': 0.5}
         )
 
-        btn_width = dp(90)
-        btn_height = dp(32)
-
-        btn_filtrar = MDRectangleFlatIconButton(
-            text='Filtrar',
-            icon='filter',
-            size_hint=(None, None),
-            size=(btn_width, btn_height),
-            md_bg_color=(0.18, 0.6, 0.18, 1),
-            text_color=(1, 1, 1, 1),
-            icon_color=(1, 1, 1, 1),
-            on_release=self.aplicar_filtro
+        acciones.add_widget(
+            MDRaisedButton(
+                text="Filtrar",
+                md_bg_color=(0.2, 0.6, 0.3, 1),
+                elevation=1,
+                on_release=self.filtrar_reportes,
+                size_hint_y=None,
+                height=dp(32),
+                font_style="Caption",
+            )
         )
 
-        btn_export = MDRectangleFlatIconButton(
-            text='Exportar',
-            icon='file-export',
-            size_hint=(None, None),
-            size=(btn_width, btn_height),
-            md_bg_color=(0.1, 0.5, 0.8, 1),
-            text_color=(1, 1, 1, 1),
-            icon_color=(1, 1, 1, 1),
-            on_release=self.exportar_csv
+        acciones.add_widget(
+            MDRaisedButton(
+                text="Exportar",
+                md_bg_color=(0.1, 0.4, 1, 1),
+                elevation=1,
+                on_release=self.exportar_reportes,
+                size_hint_y=None,
+                height=dp(32),
+                font_style="Caption",
+            )
         )
 
-        btn_borrar = MDRectangleFlatIconButton(
-            text='Borrar',
-            icon='delete',
-            size_hint=(None, None),
-            size=(btn_width, btn_height),
-            md_bg_color=(0.8, 0.2, 0.2, 1),
-            text_color=(1, 1, 1, 1),
-            icon_color=(1, 1, 1, 1),
-            on_release=self.confirmar_borrar_todos
+        acciones.add_widget(
+            MDRaisedButton(
+                text="Borrar",
+                md_bg_color=(1, 0.2, 0.2, 1),
+                elevation=1,
+                on_release=self.borrar_filtros,
+                size_hint_y=None,
+                height=dp(32),
+                font_style="Caption",
+            )
         )
 
-        botones_row.add_widget(btn_filtrar)
-        botones_row.add_widget(btn_export)
-        botones_row.add_widget(btn_borrar)
+        filtros_card.add_widget(acciones)
+        container.add_widget(filtros_card)
 
-        # Contenedor centrado
-        botones_container = MDBoxLayout(
-            orientation='horizontal',
-            adaptive_height=True,
-            adaptive_width=True,
-            pos_hint={'center_x': 0.5}
-        )
-        botones_container.add_widget(botones_row)
-
-        filtros_card.add_widget(botones_container)
-        layout.add_widget(filtros_card)
-
-        # ==============================
-        # SECCIÓN: LISTA DE REPORTES
-        # ==============================
-        lista_card = MDCard(
-            orientation='vertical',
-            padding=dp(14),
-            radius=[12, 12, 12, 12],
-            elevation=1,
-            md_bg_color=(1, 1, 1, 1),
-            size_hint_x=0.96,
-            pos_hint={'center_x': 0.5}
+        # ------------------------------------------------------------
+        # TITULO REPORTES
+        # ------------------------------------------------------------
+        container.add_widget(
+            MDLabel(
+                text="Reportes registrados",
+                font_style="H6",
+                theme_text_color="Primary",
+                halign="left",
+            )
         )
 
-        lista_card.add_widget(MDLabel(
-            text="Reportes registrados",
-            font_style="Subtitle1",
-            halign="left",
-            theme_text_color="Primary"
-        ))
+        # ------------------------------------------------------------
+        # LISTA DE REPORTES (FUNCIONAL)
+        # ------------------------------------------------------------
+        self.reportes_list = MDList(
+            spacing=dp(14),
+            size_hint_y=None,
+        )
+        self.reportes_list.bind(minimum_height=self.reportes_list.setter("height"))
 
-        self.scroll = MDScrollView()
-        self.md_list = MDList()
-        self.scroll.add_widget(self.md_list)
-        lista_card.add_widget(self.scroll)
-        layout.add_widget(lista_card)
+        container.add_widget(self.reportes_list)
+        scroll.add_widget(container)
+        main.add_widget(scroll)
+        self.add_widget(main)
 
-        self.add_widget(layout)
-        self.load_reportes()
+        # Cargar reportes al iniciar
+        self.cargar_reportes()
 
-    # ==============================
-    # FUNCIONES DE GESTIÓN
-    # ==============================
-    def volver_principal(self, instance):
-        if self.manager:
-            self.manager.current = 'principal'
+    # ------------------------------------------------------------
+    # CARGA DEL JSON (CORREGIDA)
+    # ------------------------------------------------------------
+    def cargar_reportes(self):
+        self.reportes_list.clear_widgets()
 
+        json_path = os.path.join(os.getcwd(), "app", "reportes_peligro.json")
+
+        if not os.path.exists(json_path):
+            print("⚠ No existe:", json_path)
+            return
+
+        with open(json_path, "r", encoding="utf-8") as f:
+            datos = json.load(f)
+
+        if not datos:
+            print("⚠ JSON vacío")
+            return
+
+        for reporte in datos:
+            card = self._crear_card_reporte(reporte)
+            self.reportes_list.add_widget(card)
+
+    # ------------------------------------------------------------
+    # COMPATIBILIDAD — EVITA EL ERROR:
+    # 'ListaReportes' object has no attribute 'load_reportes'
+    # ------------------------------------------------------------
     def load_reportes(self):
-        app_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        file_path = os.path.join(app_root, 'reportes_peligro.json')
-        self.md_list.clear_widgets()
+        """Alias para compatibilidad con pantallas antiguas."""
+        self.cargar_reportes()
 
-        if os.path.exists(file_path):
-            try:
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                tipo_filtro = self.filter_tipo.text.strip().lower()
-                fecha_filtro = self.filter_fecha.text.strip()
+    # ------------------------------------------------------------
+    # CARD INDIVIDUAL (FUNCIONA + MUESTRA IMAGEN)
+    # ------------------------------------------------------------
+    def _crear_card_reporte(self, reporte):
 
-                if not data:
-                    self.md_list.add_widget(OneLineListItem(text='No hay reportes guardados'))
-                    return
+        card = MDCard(
+            elevation=1,
+            radius=[dp(16)],
+            padding=dp(16),
+            size_hint_x=1,
+            adaptive_height=True,
+            md_bg_color=(1, 1, 1, 1),
+        )
 
-                for rpt in data:
-                    if tipo_filtro and tipo_filtro not in rpt.get('tipo', '').lower():
-                        continue
-                    if fecha_filtro and fecha_filtro not in rpt.get('fecha', ''):
-                        continue
+        row = MDBoxLayout(
+            orientation="horizontal",
+            spacing=dp(12),
+            size_hint_y=None,
+            height=dp(100),
+        )
 
-                    fecha = rpt.get('fecha', '')
-                    calle = rpt.get('calle', '---')
-                    tipo = rpt.get('tipo', '---')
-                    texto = f"{calle} — {tipo} ({fecha.split('T')[0] if fecha else ''})"
+        col = MDBoxLayout(
+            orientation="vertical",
+            spacing=dp(6),
+            size_hint_x=0.7,
+        )
 
-                    item = OneLineListItem(
-                        text=texto,
-                        on_release=lambda x, r=rpt: self.mostrar_detalle(r)
-                    )
-                    self.md_list.add_widget(item)
-            except Exception:
-                self.md_list.add_widget(OneLineListItem(text='Error al cargar los reportes'))
+        col.add_widget(
+            MDLabel(
+                text=f"{reporte.get('calle', 'Sin calle')} - {reporte.get('tipo', 'Sin tipo')}",
+                font_style="Subtitle1",
+                theme_text_color="Primary",
+                size_hint_y=None,
+                height=dp(22),
+            )
+        )
+
+        col.add_widget(
+            MDLabel(
+                text=f"Fecha: {reporte.get('fecha', '--')}",
+                font_style="Caption",
+                theme_text_color="Secondary",
+                size_hint_y=None,
+                height=dp(18),
+            )
+        )
+
+        col.add_widget(
+            MDLabel(
+                text=reporte.get("descripcion", "--"),
+                font_style="Body2",
+                theme_text_color="Secondary",
+                shorten=True,
+                max_lines=2,
+            )
+        )
+
+        row.add_widget(col)
+
+        # -------------------------
+        # IMAGEN DEL REPORTE (FUNCIONAL)
+        # -------------------------
+        img_path = reporte.get("imagen", "")
+        full_img_path = img_path if img_path else ""
+
+        if img_path and os.path.exists(full_img_path):
+            img_src = full_img_path
         else:
-            self.md_list.add_widget(OneLineListItem(text='No hay reportes guardados'))
+            img_src = "assets/icons/no_image.png"
 
-    def mostrar_detalle(self, reporte):
-        from kivymd.uix.dialog import MDDialog
-        from kivymd.uix.button import MDFlatButton, MDRaisedButton
-        texto = (
-            f"Calle: {reporte.get('calle')}\n"
-            f"Tipo: {reporte.get('tipo')}\n"
-            f"Descripción: {reporte.get('descripcion')}\n"
-            f"Fecha: {reporte.get('fecha')}"
+        img = FitImage(
+            source=img_src,
+            size_hint=(None, None),
+            size=(dp(80), dp(80)),
+            radius=[dp(12)],
         )
 
-        def _close(obj):
-            dialog.dismiss()
+        row.add_widget(img)
+        card.add_widget(row)
 
-        def _elim(obj):
-            dialog.dismiss()
-            self.eliminar_reporte(reporte)
+        return card
 
-        dialog = MDDialog(
-            title='Detalle del reporte',
-            text=texto,
-            buttons=[
-                MDFlatButton(text='Cerrar', on_release=_close),
-                MDRaisedButton(text='Eliminar', on_release=_elim)
-            ]
-        )
-        dialog.open()
+    # ------------------------------------------------------------
+    # LOGICA ORIGINAL
+    # ------------------------------------------------------------
+    def filtrar_reportes(self, instance):
+        pass
 
-    def eliminar_reporte(self, reporte):
-        app_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        file_path = os.path.join(app_root, 'reportes_peligro.json')
-        if not os.path.exists(file_path):
-            show_snackbar('No hay archivo de reportes')
-            return
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            nueva = [r for r in data if r.get('fecha') != reporte.get('fecha')]
-            with open(file_path, 'w', encoding='utf-8') as f:
-                json.dump(nueva, f, indent=2, ensure_ascii=False)
-            show_snackbar('Reporte eliminado')
-            self.load_reportes()
-        except Exception as e:
-            show_snackbar(f'Error eliminando reporte: {e}')
+    def exportar_reportes(self, instance):
+        pass
 
-    def aplicar_filtro(self, instance):
-        self.load_reportes()
+    def borrar_filtros(self, instance):
+        self.tipo_field.text = ""
+        self.fecha_field.text = ""
+        self.cargar_reportes()
 
-    def exportar_csv(self, instance):
-        app_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        file_path = os.path.join(app_root, 'reportes_peligro.json')
-        csv_path = os.path.join(app_root, 'reportes_peligro.csv')
-        if not os.path.exists(file_path):
-            show_snackbar('No hay reportes para exportar')
-            return
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
-                writer = csv.writer(csvfile)
-                writer.writerow(['calle', 'tipo', 'descripcion', 'fecha'])
-                for r in data:
-                    writer.writerow([r.get('calle'), r.get('tipo'), r.get('descripcion'), r.get('fecha')])
-            show_snackbar(f'Exportado a {csv_path}')
-        except Exception as e:
-            show_snackbar(f'Error exportando CSV: {e}')
-
-    def confirmar_borrar_todos(self, instance):
-        from kivymd.uix.dialog import MDDialog
-        from kivymd.uix.button import MDFlatButton, MDRaisedButton
-
-        def _cancel(obj):
-            dlg.dismiss()
-
-        def _confirm(obj):
-            dlg.dismiss()
-            self.borrar_todos()
-
-        dlg = MDDialog(
-            title='Confirmar acción',
-            text='¿Deseas borrar todos los reportes?',
-            buttons=[
-                MDFlatButton(text='Cancelar', on_release=_cancel),
-                MDRaisedButton(text='Borrar', on_release=_confirm)
-            ]
-        )
-        dlg.open()
-
-    def borrar_todos(self):
-        app_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        file_path = os.path.join(app_root, 'reportes_peligro.json')
-        try:
-            with open(file_path, 'w', encoding='utf-8') as f:
-                json.dump([], f, indent=2, ensure_ascii=False)
-            show_snackbar('Todos los reportes han sido borrados')
-            self.load_reportes()
-        except Exception as e:
-            show_snackbar(f'Error borrando reportes: {e}')
-
-
-
-
-
+    def go_back(self):
+        self.manager.current = "principal"

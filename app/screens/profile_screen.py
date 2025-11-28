@@ -4,7 +4,7 @@ from kivymd.uix.label import MDLabel
 from kivymd.uix.button import MDRaisedButton, MDIconButton
 from kivymd.uix.textfield import MDTextField
 from kivymd.uix.fitimage import FitImage
-from kivymd.uix.filemanager import MDFileManager
+from plyer import filechooser
 from kivymd.uix.scrollview import MDScrollView
 from kivymd.uix.card import MDCard
 from kivymd.uix.toolbar import MDTopAppBar
@@ -229,13 +229,6 @@ class ProfileScreen(MDScreen):
 
         self.add_widget(main_layout)
 
-        # Sistema archivos
-        self.file_manager = MDFileManager(
-            exit_manager=self.exit_manager,
-            select_path=self.select_path,
-            ext=[".png", ".jpg", ".jpeg"]
-        )
-
         self.user_data_file = "user_data.json"
         self.edit_mode = False
         self.load_user_data()
@@ -250,14 +243,14 @@ class ProfileScreen(MDScreen):
     # FOTO
     # =======================================================================
     def select_photo(self, instance):
-        self.file_manager.show(os.path.expanduser("~"))
+        filechooser.open_file(
+            on_selection=self.on_file_selected,
+            filters=["*.png", "*.jpg", "*.jpeg"]
+        )
 
-    def exit_manager(self, *args):
-        self.file_manager.close()
-
-    def select_path(self, path):
-        self.avatar.source = path
-        self.exit_manager()
+    def on_file_selected(self, selection):
+        if selection:
+            self.avatar.source = selection[0]
 
     # =======================================================================
     # EDICIÓN / GUARDADO
