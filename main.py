@@ -20,32 +20,6 @@ from app.screens.checklist_screen import ChecklistScreen
 from app.screens.pantalla_mapa import PantallaMapa
 from kivy.app import App
 
-consejos_seguridad = [
-    {"titulo": "Uso del casco", "descripcion": "Usa casco siempre - reduce 85% el riesgo de lesiones", "icono": "shield-check"},
-    {"titulo": "Revisión técnica", "descripcion": "Revisa frenos y luces antes de salir", "icono": "tools"},
-    {"titulo": "Señales de tránsito", "descripcion": "Respeta las señales de tránsito", "icono": "traffic-light"},
-    {"titulo": "Visibilidad", "descripcion": "Usa ropa reflectante y colores brillantes", "icono": "lightbulb"},
-    {"titulo": "Comunicación", "descripcion": "Mantén tu celular con batería suficiente", "icono": "cellphone"},
-    {"titulo": "Estado de vías", "descripcion": "Evita ciclovías en mal estado", "icono": "road-variant"},
-    {"titulo": "Iluminación nocturna", "descripcion": "Usa luces intermitentes en la noche", "icono": "flashlight"},
-    {"titulo": "Distancia segura", "descripcion": "Mantén distancia segura de vehículos", "icono": "car"},
-    {"titulo": "Hidratación", "descripcion": "Hidrátate cada 15-20 minutos", "icono": "water"},
-    {"titulo": "Neumáticos", "descripcion": "Revisa la presión de neumáticos", "icono": "tire"},
-    {"titulo": "Concentración", "descripcion": "No uses audífonos mientras manejas", "icono": "headphones-off"},
-    {"titulo": "Planificación", "descripcion": "Planifica tu ruta antes de salir", "icono": "map"}
-]
-
-estadisticas_usuario = {
-    "distancia_total": 245.7,
-    "tiempo_total": 890,  # en minutos
-    "rutas_completadas": 18,
-    "incidentes_reportados": 5,
-    "calorias_quemadas": 3240,
-    "co2_ahorrado": 12.3,  # kg
-    "velocidad_promedio": 16.5,
-    "mejor_tiempo": 42
-}
-
 def load_users():
     import json
     if os.path.exists('user_data.json'):
