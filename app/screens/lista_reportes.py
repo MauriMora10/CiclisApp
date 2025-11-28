@@ -7,6 +7,7 @@ from kivymd.uix.card import MDCard
 from kivymd.uix.scrollview import MDScrollView
 from kivymd.uix.list import MDList
 from kivymd.uix.fitimage import FitImage
+from kivymd.uix.dialog import MDDialog
 from kivy.metrics import dp
 import json
 import os
@@ -143,10 +144,10 @@ class ListaReportes(MDScreen):
 
         acciones.add_widget(
             MDRaisedButton(
-                text="Borrar",
+                text="Eliminar todos",
                 md_bg_color=(1, 0.2, 0.2, 1),
                 elevation=1,
-                on_release=self.borrar_filtros,
+                on_release=self.borrar_todos_reportes,
                 size_hint_y=None,
                 height=dp(32),
                 font_style="Caption",
@@ -204,8 +205,8 @@ class ListaReportes(MDScreen):
             print("⚠ JSON vacío")
             return
 
-        for reporte in datos:
-            card = self._crear_card_reporte(reporte)
+        for index, reporte in enumerate(datos):
+            card = self._crear_card_reporte(reporte, index)
             self.reportes_list.add_widget(card)
 
     # ------------------------------------------------------------
@@ -219,7 +220,7 @@ class ListaReportes(MDScreen):
     # ------------------------------------------------------------
     # CARD INDIVIDUAL (FUNCIONA + MUESTRA IMAGEN)
     # ------------------------------------------------------------
-    def _crear_card_reporte(self, reporte):
+    def _crear_card_reporte(self, reporte, index):
 
         card = MDCard(
             elevation=1,
@@ -294,6 +295,19 @@ class ListaReportes(MDScreen):
         )
 
         row.add_widget(img)
+
+        # -------------------------
+        # BOTÓN DE ELIMINAR
+        # -------------------------
+        delete_btn = MDIconButton(
+            icon="delete",
+            icon_color=(1, 0.2, 0.2, 1),
+            on_release=lambda x: self.borrar_reporte(index),
+            size_hint=(None, None),
+            size=(dp(40), dp(40)),
+        )
+
+        row.add_widget(delete_btn)
         card.add_widget(row)
 
         return card
@@ -310,6 +324,90 @@ class ListaReportes(MDScreen):
     def borrar_filtros(self, instance):
         self.tipo_field.text = ""
         self.fecha_field.text = ""
+        self.cargar_reportes()
+
+    def borrar_reporte(self, index):
+        """Muestra un diálogo de confirmación antes de eliminar un reporte específico por índice."""
+        self.index_to_delete = index  # Guardar el índice para usar en la confirmación
+
+        dialog = MDDialog(
+            title="Confirmar eliminación",
+            text="¿Estás seguro de que quieres eliminar este reporte? Esta acción no se puede deshacer.",
+            buttons=[
+                MDRaisedButton(
+                    text="Cancelar",
+                    on_release=lambda x: dialog.dismiss()
+                ),
+                MDRaisedButton(
+                    text="Eliminar",
+                    md_bg_color=(1, 0.2, 0.2, 1),
+                    on_release=lambda x: self.confirmar_eliminacion(dialog)
+                ),
+            ],
+        )
+        dialog.open()
+
+    def confirmar_eliminacion(self, dialog):
+        """Elimina el reporte después de la confirmación."""
+        dialog.dismiss()
+        index = self.index_to_delete
+
+        json_path = os.path.join(os.getcwd(), "app", "reportes_peligro.json")
+
+        if not os.path.exists(json_path):
+            print("⚠ No existe:", json_path)
+            return
+
+        with open(json_path, "r", encoding="utf-8") as f:
+            datos = json.load(f)
+
+        if 0 <= index < len(datos):
+            # Eliminar el reporte en el índice especificado
+            del datos[index]
+
+            # Guardar el JSON actualizado
+            with open(json_path, "w", encoding="utf-8") as f:
+                json.dump(datos, f, indent=4, ensure_ascii=False)
+
+            # Recargar la lista de reportes
+            self.cargar_reportes()
+        else:
+            print(f"⚠ Índice {index} fuera de rango")
+
+    def borrar_todos_reportes(self, instance):
+        """Muestra un diálogo de confirmación antes de eliminar todos los reportes."""
+        dialog = MDDialog(
+            title="Confirmar eliminación",
+            text="¿Estás seguro de que quieres eliminar TODOS los reportes? Esta acción no se puede deshacer.",
+            buttons=[
+                MDRaisedButton(
+                    text="Cancelar",
+                    on_release=lambda x: dialog.dismiss()
+                ),
+                MDRaisedButton(
+                    text="Eliminar todos",
+                    md_bg_color=(1, 0.2, 0.2, 1),
+                    on_release=lambda x: self.confirmar_eliminacion_todos(dialog)
+                ),
+            ],
+        )
+        dialog.open()
+
+    def confirmar_eliminacion_todos(self, dialog):
+        """Elimina todos los reportes después de la confirmación."""
+        dialog.dismiss()
+
+        json_path = os.path.join(os.getcwd(), "app", "reportes_peligro.json")
+
+        if not os.path.exists(json_path):
+            print("⚠ No existe:", json_path)
+            return
+
+        # Eliminar todos los reportes guardando una lista vacía
+        with open(json_path, "w", encoding="utf-8") as f:
+            json.dump([], f, indent=4, ensure_ascii=False)
+
+        # Recargar la lista de reportes (que estará vacía)
         self.cargar_reportes()
 
     def go_back(self):
